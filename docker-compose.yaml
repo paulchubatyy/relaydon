@@ -1,0 +1,10 @@
+---
+services:
+  bot:
+    image: ${BOT_IMAGE}
+    env_file:
+      - .env
+    volumes:
+      - type: bind
+        source: ./data.xobb.me.csv
+        target: /app/data.csv

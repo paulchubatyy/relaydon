@@ -86,18 +86,13 @@ def publish_entry(entry):
     )
 
     post = mastodon.status_post(
-        status=f"""
-        {entry.title}
-
-        {entry.summary}
-
-        {entry.link}
-        """,
+        status=f"{entry.summary}\n\n{entry.link}",
         visibility='public'
     )
 
     log.info(f"Entry {entry.title} published to {post.url}"
              f" at {post.created_at}")
+
 
 def check_data_file(filepath: str) -> None:
     """Validate data file existence and permissions."""
