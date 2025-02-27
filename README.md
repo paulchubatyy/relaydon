@@ -19,3 +19,20 @@ Running in Docker
 ```bash
 docker run --rm -it -v ./data.csv:/app/data.csv -v ./.env:/app/.env ghcr.io/paulchubatyy/paulchubatyy/relaydon:latest
 ```
+
+Running in Docker Compose
+-------------------------
+
+```bash
+docker-compose up -d
+```
+
+Development Setup
+----------------------
+
+Open the project in VSCode and reopen in container.
+
+License
+-------
+
+[WTFPL](./LICENSE) – Do What the F*ck You Want to Public License
