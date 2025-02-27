@@ -3,7 +3,7 @@ import environs
 import feedparser
 import logging
 from time import struct_time
-from datetime import datetime
+from datetime import datetime, timedelta
 from csv import DictReader, DictWriter
 
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -121,8 +121,7 @@ def main():
         for feed_url, last_update in feed_data.items():
             log.info(f"Adding feed {feed_url}, last update {last_update}")
             scheduler.add_job(fetch_feed, 'interval', args=[feed_url], seconds=INTERVAL_SECONDS)
-        for job in scheduler.get_jobs():
-            log.info(f"Next run for {job.id} at {job._get_run_times(datetime.now())[0]}")
+            log.info(f"will fetch feed {feed_url} on {datetime.now() + timedelta(seconds=INTERVAL_SECONDS)}")
         scheduler.start()
     except KeyboardInterrupt:
         log.info("Shutting down the relay")
