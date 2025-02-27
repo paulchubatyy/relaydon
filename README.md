@@ -3,7 +3,7 @@ RelayDon
 
 > Relay: noun, electrical device such that current flowing through it in one circuit can switch on and off a current in a second circuit.
 
-Relay reads the RSS feeds from the file and posts to Mastodon new posts.
+Relay reads the RSS feeds from the file and posts to Mastodon new posts. [How I spammed my followers?](https://xobb.me/projects/relaydon)
 
 Running Locally
 ---------------
