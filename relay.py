@@ -27,7 +27,7 @@ GIT_SHA = env.str('GIT_SHA', default='development')
 # Logging setup
 logging.basicConfig(
     level=LOG_LEVEL,
-    format='%(asctime)s - %(pathname)s:%(lineno)d %(message)s',
+    format='%(asctime)s - %(pathname)s:%(lineno)d - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 log = logging.getLogger(__file__)
