@@ -25,6 +25,7 @@ CSV_DELIMITER = env.str('CSV_DELIMITER', default=',')
 TEST = env.bool('TEST', default=False)
 MASTODON_ACCESS_TOKEN = env.str('MASTODON_ACCESS_TOKEN')
 MASTODON_URL = env.str('MASTODON_URL')
+GIT_SHA = env.str('GIT_SHA', default='development')
 
 
 
@@ -108,7 +109,7 @@ def main():
 
         check_data_file(DATA_FILE)
 
-        log.info("Starting relay...")
+        log.info(f"Starting RelayDon version {GIT_SHA}")
         read_data()
         log.info(f"{DATA_FILE} loaded, found {len(feed_data)} feeds")
 
