@@ -122,7 +122,7 @@ def main():
             log.info(f"Adding feed {feed_url}, last update {last_update}")
             scheduler.add_job(fetch_feed, 'interval', args=[feed_url], seconds=INTERVAL_SECONDS)
         for job in scheduler.get_jobs():
-            log.info(f"Next run for {job.id} at {job.next_run_time}")
+            log.info(f"Next run for {job.id} at {job._get_run_times(datetime.now())[0]}")
         scheduler.start()
     except KeyboardInterrupt:
         log.info("Shutting down the relay")
