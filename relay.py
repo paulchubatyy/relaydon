@@ -59,7 +59,7 @@ def write_data():
 def fetch_feed(feed_url: str):
     try:
         feed = feedparser.parse(feed_url)
-        log.debug(f"Fetching feed {feed_url}")
+        log.info(f"Fetching feed {feed_url}")
         for entry in feed.entries:
             published_dt = struct_to_datetime(entry.published_parsed)
 
@@ -67,8 +67,8 @@ def fetch_feed(feed_url: str):
                 log.debug(f"Skipping old entry {entry.title} that was published on {published_dt}")
                 continue
 
-            log.info(f"New entry in feed {feed_url}")
-            log.info(f"{entry.title} published on {published_dt}")
+            log.debug(f"New entry in feed {feed_url}")
+            log.debug(f"{entry.title} published on {published_dt}")
 
             publish_entry(entry)
 
@@ -79,7 +79,7 @@ def fetch_feed(feed_url: str):
 
 
 def publish_entry(entry):
-    log.info(f"Publishing entry {entry.title}")
+    log.debug(f"Publishing entry {entry.title}")
 
     mastodon = Mastodon(
         access_token=MASTODON_ACCESS_TOKEN,
