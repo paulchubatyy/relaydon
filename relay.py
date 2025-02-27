@@ -9,35 +9,47 @@ from csv import DictReader, DictWriter
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor
 from mastodon import Mastodon
-from threading import Lock
+from threading import Lock, Thread
 
-
+# Read the configuration from env variables
 env = environs.Env()
 env.read_env()
 
-# Important part: feed url and last update
-feed_data: dict[str, datetime] = {}
-
+# Configuration itself
 LOG_LEVEL = env.str('LOG_LEVEL', default='INFO').upper()
 INTERVAL_SECONDS = env.int('INTERVAL_SECONDS', default=900)
 DATA_FILE = env.str('DATA_FILE', default='data.csv')
 CSV_DELIMITER = env.str('CSV_DELIMITER', default=',')
-TEST = env.bool('TEST', default=False)
-MASTODON_ACCESS_TOKEN = env.str('MASTODON_ACCESS_TOKEN')
-MASTODON_URL = env.str('MASTODON_URL')
+MASTODON_ACCESS_TOKEN = env.str('MASTODON_ACCESS_TOKEN', default=None)
+MASTODON_URL = env.str('MASTODON_URL', default=None)
 GIT_SHA = env.str('GIT_SHA', default='development')
 
+# Logging setup
+logging.basicConfig(
+    level=LOG_LEVEL,
+    format='%(asctime)s - %(pathname)s:%(lineno)d %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+log = logging.getLogger(__file__)
+logging.getLogger('apscheduler').setLevel(logging.WARNING)
 
+# Important part: feed url and last update
+feed_data: dict[str, datetime] = {}
+# Thread lock for data writes
+data_lock = Lock()
 
+# Convert feedparser time struct to datetime
 def struct_to_datetime(time_struct: struct_time) -> datetime:
     return datetime.fromtimestamp(datetime(*time_struct[:6]).timestamp())
 
+# Configuration assumptions
+mastodon = Mastodon(
+    access_token=MASTODON_ACCESS_TOKEN,
+    api_base_url=MASTODON_URL
+) if MASTODON_ACCESS_TOKEN and MASTODON_URL else None
 
-data_lock = Lock()
-
-logging.basicConfig(level=LOG_LEVEL)
-log = logging.getLogger(__file__)
-logging.getLogger('apscheduler').setLevel(logging.WARNING)
+# Test mode?
+TEST_MODE = mastodon is None
 
 
 def read_data():
@@ -63,7 +75,7 @@ def fetch_feed(feed_url: str):
         for entry in feed.entries:
             published_dt = struct_to_datetime(entry.published_parsed)
 
-            if not TEST and published_dt <= feed_data[feed_url]:
+            if not TEST_MODE and published_dt <= feed_data[feed_url]:
                 log.debug(f"Skipping old entry {entry.title} that was published on {published_dt}")
                 continue
 
@@ -81,10 +93,9 @@ def fetch_feed(feed_url: str):
 def publish_entry(entry):
     log.debug(f"Publishing entry {entry.title}")
 
-    mastodon = Mastodon(
-        access_token=MASTODON_ACCESS_TOKEN,
-        api_base_url=MASTODON_URL
-    )
+    if TEST_MODE:
+        log.warning(f"{entry.summary}\n\n{entry.link}")
+        return
 
     post = mastodon.status_post(
         status=f"{entry.summary}\n\n{entry.link}",
@@ -104,7 +115,7 @@ def check_data_file(filepath: str) -> None:
 
 def main():
     try:
-        if TEST:
+        if TEST_MODE:
             log.warning("Running in test mode")
 
         check_data_file(DATA_FILE)
@@ -120,6 +131,9 @@ def main():
         )
         for feed_url, last_update in feed_data.items():
             log.info(f"Adding feed {feed_url}, last update {last_update}")
+            thread = Thread(target=fetch_feed, args=(feed_url,))
+            thread.start()
+            thread.join()
             scheduler.add_job(fetch_feed, 'interval', args=[feed_url], seconds=INTERVAL_SECONDS)
             log.info(f"will fetch feed {feed_url} on {datetime.now() + timedelta(seconds=INTERVAL_SECONDS)}")
         scheduler.start()
