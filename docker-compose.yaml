@@ -6,5 +6,5 @@ services:
       - .env
     volumes:
       - type: bind
-        source: ./data.xobb.me.csv
+        source: ./data.csv
         target: /app/data.csv
