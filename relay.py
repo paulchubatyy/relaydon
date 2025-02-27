@@ -8,6 +8,7 @@ from csv import DictReader, DictWriter
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor
+from mastodon import Mastodon
 from threading import Lock
 
 
@@ -21,6 +22,10 @@ LOG_LEVEL = env.str('LOG_LEVEL', default='INFO').upper()
 INTERVAL_SECONDS = env.int('INTERVAL_SECONDS', default=900)
 DATA_FILE = env.str('DATA_FILE', default='data.csv')
 CSV_DELIMITER = env.str('CSV_DELIMITER', default=',')
+TEST = env.bool('TEST', default=False)
+MASTODON_ACCESS_TOKEN = env.str('MASTODON_ACCESS_TOKEN')
+MASTODON_URL = env.str('MASTODON_URL')
+
 
 
 def struct_to_datetime(time_struct: struct_time) -> datetime:
@@ -31,6 +36,7 @@ data_lock = Lock()
 
 logging.basicConfig(level=LOG_LEVEL)
 log = logging.getLogger(__file__)
+logging.getLogger('apscheduler').setLevel(logging.WARNING)
 
 
 def read_data():
@@ -52,15 +58,19 @@ def write_data():
 def fetch_feed(feed_url: str):
     try:
         feed = feedparser.parse(feed_url)
+        log.debug(f"Fetching feed {feed_url}")
         for entry in feed.entries:
             published_dt = struct_to_datetime(entry.published_parsed)
-            if published_dt <= feed_data[feed_url]:
+
+            if not TEST and published_dt <= feed_data[feed_url]:
                 log.debug(f"Skipping old entry {entry.title} that was published on {published_dt}")
                 continue
+
             log.info(f"New entry in feed {feed_url}")
             log.info(f"{entry.title} published on {published_dt}")
 
             publish_entry(entry)
+
             feed_data[feed_url] = published_dt
             write_data()
     except Exception as e:
@@ -70,14 +80,38 @@ def fetch_feed(feed_url: str):
 def publish_entry(entry):
     log.info(f"Publishing entry {entry.title}")
 
+    mastodon = Mastodon(
+        access_token=MASTODON_ACCESS_TOKEN,
+        api_base_url=MASTODON_URL
+    )
+
+    post = mastodon.status_post(
+        status=f"""
+        {entry.title}
+
+        {entry.summary}
+
+        {entry.link}
+        """,
+        visibility='public'
+    )
+
+    log.info(f"Entry {entry.title} published to {post.url}"
+             f" at {post.created_at}")
+
+def check_data_file(filepath: str) -> None:
+    """Validate data file existence and permissions."""
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"Data file {filepath} not found")
+    if not (os.access(filepath, os.R_OK) and os.access(filepath, os.W_OK)):
+        raise PermissionError(f"Data file {filepath} needs read and write permissions")
+
 def main():
     try:
-        if not os.path.exists(DATA_FILE):
-            raise FileNotFoundError(f"Data file {DATA_FILE} not found")
-        if not os.access(DATA_FILE, os.R_OK):
-            raise PermissionError(f"Data file {DATA_FILE} is not readable")
-        if not os.access(DATA_FILE, os.W_OK):
-            raise PermissionError(f"Data file {DATA_FILE} is not writable")
+        if TEST:
+            log.warning("Running in test mode")
+
+        check_data_file(DATA_FILE)
 
         log.info("Starting relay...")
         read_data()
