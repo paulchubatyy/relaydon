@@ -3,7 +3,10 @@ RelayDon
 
 > Relay: noun, electrical device such that current flowing through it in one circuit can switch on and off a current in a second circuit.
 
-Relay reads the RSS feeds from the file and posts to Mastodon new posts. [How I spammed my followers?](https://xobb.me/projects/relaydon)
+Relay reads the RSS feeds from the file and posts to Mastodon as status updates.
+[How I spammed my followers?](https://xobb.me/projects/relaydon).
+Only the latest post will show up if there two or more post within the `INTERVAL_SECONDS`
+configuration variable.
 
 Running Locally
 ---------------
@@ -28,7 +31,7 @@ docker-compose up -d
 ```
 
 Development Setup
-----------------------
+-----------------
 
 Open the project in VSCode and reopen in container.
 
