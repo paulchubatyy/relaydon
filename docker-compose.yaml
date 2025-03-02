@@ -8,3 +8,7 @@ services:
       - type: bind
         source: ./data.csv
         target: /app/data.csv
+    healthcheck:
+      test: ["CMD", "ps", "-aux", "|",  "grep", "-v", "grep", "|", "grep", "relay.py"]
+      interval: 30s
+      retries: 5
