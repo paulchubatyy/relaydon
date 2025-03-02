@@ -23,6 +23,7 @@ CSV_DELIMITER = env.str('CSV_DELIMITER', default=',')
 MASTODON_ACCESS_TOKEN = env.str('MASTODON_ACCESS_TOKEN', default=None)
 MASTODON_URL = env.str('MASTODON_URL', default=None)
 MASTODON_VISIBILITY = env.str('MASTODON_VISIBILITY', default='unlisted')
+MASTODON_APPLICATION_NAME = env.str('MASTODON_APPLICATION_NAME', default='RelayDon')
 GIT_SHA = env.str('GIT_SHA', default='development')
 
 # Logging setup
@@ -100,7 +101,8 @@ def publish_entry(entry):
 
     post = mastodon.status_post(
         status=f"{entry.summary}\n\n{entry.link}",
-        visibility=MASTODON_VISIBILITY
+        visibility=MASTODON_VISIBILITY,
+        application=MASTODON_APPLICATION_NAME,
     )
 
     log.info(f"Entry {entry.title} published to {post.url}"
