@@ -102,7 +102,7 @@ def publish_entry(entry):
     post = mastodon.status_post(
         status=f"{entry.summary}\n\n{entry.link}",
         visibility=MASTODON_VISIBILITY,
-        application=MASTODON_APPLICATION_NAME,
+        # application=MASTODON_APPLICATION_NAME,
     )
 
     log.info(f"Entry {entry.title} published to {post.url}"
