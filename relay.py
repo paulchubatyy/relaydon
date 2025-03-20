@@ -2,6 +2,7 @@ import os
 import environs
 import feedparser
 import logging
+import signal
 from time import struct_time
 from datetime import datetime, timedelta
 from csv import DictReader, DictWriter
@@ -149,4 +150,5 @@ def main():
 
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGTERM, write_data)
     main()
