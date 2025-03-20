@@ -2,6 +2,7 @@
 services:
   bot:
     image: ${BOT_IMAGE}
+    restart: unless-stopped
     env_file:
       - .env
     volumes:
