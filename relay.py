@@ -155,5 +155,5 @@ def main():
 
 
 if __name__ == '__main__':
-    signal.signal(signal.SIGTERM, write_data)
+    signal.signal(signal.SIGTERM, lambda signum, frame: write_data())
     main()
