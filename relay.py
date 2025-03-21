@@ -2,6 +2,7 @@ import os
 import environs
 import feedparser
 import logging
+import time
 import signal
 from time import struct_time
 from datetime import datetime, timedelta
@@ -17,6 +18,7 @@ env = environs.Env()
 env.read_env()
 
 # Configuration itself
+TZ = env.str('TZ', default='')
 LOG_LEVEL = env.str('LOG_LEVEL', default='INFO').upper()
 INTERVAL_SECONDS = env.int('INTERVAL_SECONDS', default=900)
 DATA_FILE = env.str('DATA_FILE', default='data.csv')
@@ -119,6 +121,9 @@ def check_data_file(filepath: str) -> None:
 
 def main():
     try:
+        if TZ:
+            time.tzset()
+            log.warning(f"Set timezone to: {TZ}")
         if TEST_MODE:
             log.warning("Running in test mode")
 
